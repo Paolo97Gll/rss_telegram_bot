@@ -17,7 +17,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 
-from mysecrets import * # for BOT_TOKEN and CHAT_ID
+from mysecrets import * # for BOT_TOKEN, CHAT_ID and TIMEZONE
 
 
 #####################################################################
@@ -93,7 +93,7 @@ utils = Utils()
 # SCHEDULER
 
 
-scheduler = AsyncIOScheduler(timezone="Europe/Rome")
+scheduler = AsyncIOScheduler(timezone=TIMEZONE)
 
 @scheduler.scheduled_job(CronTrigger(hour=7))
 # @scheduler.scheduled_job(IntervalTrigger(seconds=5)) # for debug

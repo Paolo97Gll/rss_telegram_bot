@@ -16,6 +16,7 @@ Create a `mysecrets.py` file with the following content:
 ```python
 BOT_TOKEN: str = ... # your personal telegram bot token
 CHAT_ID: int = ... # your telegram chat ID
+TIMEZONE: str = ... # your timezone, like "Europe/Rome"
 ```
 
 Then you can start it with:
