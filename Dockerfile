@@ -17,6 +17,8 @@ ENV PATH=/venv/bin:$PATH
 # install dependencies
 COPY requirements.txt .
 RUN --mount=type=cache,target=/root/.cache \
+    pip install wheel
+RUN --mount=type=cache,target=/root/.cache \
     pip install -r requirements.txt
 
 #########
