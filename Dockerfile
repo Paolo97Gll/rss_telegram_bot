@@ -36,6 +36,7 @@ ENV PATH=/venv/bin:$PATH
 WORKDIR /app
 # copy bot app
 COPY bot.py .
+COPY mysecrets.py .
 
 # exec bot
 ENTRYPOINT ["python", "bot.py"]

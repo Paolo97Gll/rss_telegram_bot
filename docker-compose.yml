@@ -1,0 +1,11 @@
+# RSS TELEGRAM BOT (https://github.com/Paolo97Gll/rss_telegram_bot)
+# Copyright (c) 2022 Paolo Galli
+
+version: "3.9"
+
+services:
+  rss_telegram_bot:
+    build: .
+    image: paolo97gll/rss_telegram_bot
+    container_name: rss_telegram_bot
+    restart: always
