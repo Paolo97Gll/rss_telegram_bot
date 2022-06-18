@@ -39,7 +39,7 @@ Then you can start it with:
 - **Docker**
 
   ```
-  docker compose build --pull --parallel && docker compose up -d
+  docker compose build --pull && docker compose up -d
   ```
 
 - **Virtual environment**
