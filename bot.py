@@ -98,15 +98,16 @@ scheduler = AsyncIOScheduler(timezone=TIMEZONE)
 @scheduler.scheduled_job(CronTrigger(hour=7))
 # @scheduler.scheduled_job(IntervalTrigger(seconds=5)) # for debug
 async def fetch_news():
+    date = (datetime.now()-timedelta(days=1)).strftime('%d/%m/%Y')
+    dt_high = datetime.now()
+    dt_low = dt_high - timedelta(days=1)
+    # NEWS
     try:
-        date = (datetime.now()-timedelta(days=1)).strftime('%d/%m/%Y')
         msg = f"RIASSUNTO NEWS DEL {date}"
         msg = f"{md.bold(msg)}\n\n"
         # FETCH MEDIA INAF
         rsp = await utils.fetch("http://media.inaf.it/feed")
         rsp = xmltodict.parse(rsp)["rss"]["channel"]
-        dt_high = datetime.now()
-        dt_low = dt_high - timedelta(days=1)
         items = [i for i in range(len(rsp["item"]))
             if dt_low < datetime.strptime(rsp["item"][i]["pubDate"], "%a, %d %b %Y %H:%M:%S +0000") < dt_high]
         msg += f"{md.bold(rsp['title'])}\n{md.italic(rsp['description'])}\n{md.escape_md(rsp['link'])}\n"
@@ -114,7 +115,10 @@ async def fetch_news():
             msg += f"\n• {md.link(rsp['item'][i]['title'], rsp['item'][i]['link'])}"
         # SEND MESSAGE
         await BOT.send_message(CHAT_ID, msg, "MarkdownV2", disable_web_page_preview=True)
-        # SEND APOD
+    except Exception as e:
+        logger.error(f"{type(e).__name__}: {e}")
+    # APOD
+    try:
         rsp = await utils.fetch(f"https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY&date={dt_low.strftime('%Y-%m-%d')}")
         rsp = ujson.loads(rsp)
         apod_date = f"APOD {date}"
@@ -123,7 +127,6 @@ async def fetch_news():
         await BOT.send_photo(CHAT_ID, rsp["url"], msg, "MarkdownV2")
     except Exception as e:
         logger.error(f"{type(e).__name__}: {e}")
-        await BOT.send_message(CHAT_ID, f"Impossibile reperire news per il {date}")
 
 
 #####################################################################
