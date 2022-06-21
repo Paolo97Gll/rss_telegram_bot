@@ -11,7 +11,7 @@ Currently implemented news:
 
 ## Customizations
 
-All customizations should be placed in the `fetch_news` function, that is the core of the bot. Change it's implementation according to your preferences (you can change the news sources, the message formatting, ...).
+All customizations should be placed in the `fetch_news*` functions, that are the core of the bot. Change their implementation according to your preferences (you can change the news sources, the message formatting, ...).
 
 To change the scheduling, simply change the decorators on top of the function. For example, if you want to receive news every day at 7 AM and 7 PM:
 
@@ -24,6 +24,20 @@ async def fetch_news(...):
 
 More informations about the existing triggers in the [APScheduler documentation](https://apscheduler.readthedocs.io/en/3.x/userguide.html#choosing-the-right-scheduler-job-store-s-executor-s-and-trigger-s).
 
+To change timezone, change the `TZ` environment variable in Dockerfile, for example:
+
+```Dockerfile
+ENV TZ=Europe/Rome
+```
+
+```Dockerfile
+ENV TZ=America/New_York
+```
+
+```Dockerfile
+ENV TZ=Etc/UTC
+```
+
 ## Setup
 
 Create a `mysecrets.py` file with the following content:
@@ -31,7 +45,6 @@ Create a `mysecrets.py` file with the following content:
 ```python
 BOT_TOKEN: str = ... # your personal telegram bot token
 CHAT_ID: int = ... # your telegram chat ID
-TIMEZONE: str = ... # your timezone, like "Europe/Rome"
 ```
 
 Then you can start it with:
