@@ -140,9 +140,9 @@ scheduler = AsyncIOScheduler(timezone=TIMEZONE)
 @scheduler.scheduled_job(CronTrigger(hour=7))
 # @scheduler.scheduled_job(IntervalTrigger(seconds=5)) # for debug
 async def fetch_news():
-    date = (datetime.now()-timedelta(days=1)).strftime('%d/%m/%Y')
-    dt_high = datetime.now()
-    dt_low = dt_high - timedelta(days=1)
+    date = (datetime.now()-timedelta(days=1)).strftime("%d/%m/%Y")
+    dt_low = datetime.strptime(date, "%d/%m/%Y")
+    dt_high = dt_low + timedelta(days=1)
     status_feed, status_apod = False, False
     for _ in range(48):
         if not status_feed:
