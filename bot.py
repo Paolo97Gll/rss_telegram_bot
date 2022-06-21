@@ -5,6 +5,7 @@
 
 import asyncio
 import logging
+import os
 from datetime import datetime, timedelta
 
 import aiogram.utils.markdown as md
@@ -58,6 +59,11 @@ logger.propagate = False
 (logger_handler := logging.StreamHandler()).setFormatter(ColoredFormatter(fmt=logging_format))
 logger.addHandler(logger_handler)
 
+timezone_tmp = os.getenv("TZ")
+if not timezone_tmp:
+    logger.warning("Timezone is None, setting to Etc/UTC")
+TIMEZONE = timezone_tmp if timezone_tmp else "Etc/UTC"
+
 BOT = Bot(BOT_TOKEN)
 
 class Utils():
@@ -93,15 +99,7 @@ utils = Utils()
 # SCHEDULER
 
 
-scheduler = AsyncIOScheduler(timezone=TIMEZONE)
-
-@scheduler.scheduled_job(CronTrigger(hour=7))
-# @scheduler.scheduled_job(IntervalTrigger(seconds=5)) # for debug
-async def fetch_news():
-    date = (datetime.now()-timedelta(days=1)).strftime('%d/%m/%Y')
-    dt_high = datetime.now()
-    dt_low = dt_high - timedelta(days=1)
-    # NEWS
+async def fetch_news_feed(date, dt_low, dt_high) -> bool:
     try:
         msg = f"RIASSUNTO NEWS DEL {date}"
         msg = f"{md.bold(msg)}\n\n"
@@ -111,13 +109,19 @@ async def fetch_news():
         items = [i for i in range(len(rsp["item"]))
             if dt_low < datetime.strptime(rsp["item"][i]["pubDate"], "%a, %d %b %Y %H:%M:%S +0000") < dt_high]
         msg += f"{md.bold(rsp['title'])}\n{md.italic(rsp['description'])}\n{md.escape_md(rsp['link'])}\n"
-        for i in items:
-            msg += f"\n• {md.link(rsp['item'][i]['title'], rsp['item'][i]['link'])}"
+        if items:
+            for i in items:
+                msg += f"\n• {md.link(rsp['item'][i]['title'], rsp['item'][i]['link'])}"
+        else:
+            msg += "\nNon ci sono news per questa giornata"
         # SEND MESSAGE
         await BOT.send_message(CHAT_ID, msg, "MarkdownV2", disable_web_page_preview=True)
+        return True
     except Exception as e:
         logger.error(f"{type(e).__name__}: {e}")
-    # APOD
+        return False
+
+async def fetch_news_apod(date, dt_low, dt_high) -> bool:
     try:
         rsp = await utils.fetch(f"https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY&date={dt_low.strftime('%Y-%m-%d')}")
         rsp = ujson.loads(rsp)
@@ -125,8 +129,29 @@ async def fetch_news():
         apod_page_link = f"https://apod.nasa.gov/apod/ap{dt_low.strftime('%y%m%d')}.html"
         msg = f"{md.link(apod_date, apod_page_link)}: \"{rsp['title']}\""
         await BOT.send_photo(CHAT_ID, rsp["url"], msg, "MarkdownV2")
+        return True
     except Exception as e:
         logger.error(f"{type(e).__name__}: {e}")
+        return False
+
+
+scheduler = AsyncIOScheduler(timezone=TIMEZONE)
+
+@scheduler.scheduled_job(CronTrigger(hour=7))
+# @scheduler.scheduled_job(IntervalTrigger(seconds=5)) # for debug
+async def fetch_news():
+    date = (datetime.now()-timedelta(days=1)).strftime('%d/%m/%Y')
+    dt_high = datetime.now()
+    dt_low = dt_high - timedelta(days=1)
+    status_feed, status_apod = False, False
+    for _ in range(48):
+        if not status_feed:
+            status_feed = await fetch_news_feed(date, dt_low, dt_high)
+        if not status_apod:
+            status_apod = await fetch_news_apod(date, dt_low, dt_high)
+        if status_feed and status_apod:
+            return
+        asyncio.sleep(300)
 
 
 #####################################################################

@@ -19,6 +19,10 @@ RUN --mount=type=cache,target=/root/.cache \
 # update PATH
 ENV PATH=/venv/bin:$PATH
 
+# set timezone -> CHANGE TZ ACCORDING TO YOUR VALUE
+ENV TZ=Europe/Rome
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 # change workdir in "/app" folder
 WORKDIR /app
 # copy bot app
