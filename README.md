@@ -44,7 +44,8 @@ Create a `mysecrets.py` file with the following content:
 
 ```python
 BOT_TOKEN: str = ... # your personal telegram bot token
-CHAT_ID: int = ... # your telegram chat ID
+CHAT_ID_LIST_FEED: list[int] = [...] # your telegram chat IDs for feed news
+CHAT_ID_LIST_APOD: list[int] = [...] # your telegram chat IDs for apod news
 ```
 
 Then you can start it with:
@@ -60,7 +61,7 @@ Then you can start it with:
   Setup environment:
 
   ```
-  python -m venv venv/
+  python -m venv venv
   source venv/bin/activate
   pip install wheel
   pip install -r requirements

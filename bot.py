@@ -18,7 +18,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 
-from mysecrets import * # for BOT_TOKEN, CHAT_ID and TIMEZONE
+from mysecrets import * # for BOT_TOKEN, CHAT_ID_LIST_FEED, CHAT_ID_LIST_APOD
 
 
 #####################################################################
@@ -43,7 +43,7 @@ class ColoredFormatter(logging.Formatter):
         }
         self._default_formatter = logging.Formatter(fmt)
         self._formatters = {
-            1: logging.Formatter(colors["bold_blue"] + fmt + colors["reset"]),
+            100: logging.Formatter(colors["bold_blue"] + fmt + colors["reset"]),
             logging.DEBUG: logging.Formatter(colors["grey"] + fmt + colors["reset"]),
             logging.INFO: logging.Formatter(colors["green"] + fmt + colors["reset"]),
             logging.WARNING: logging.Formatter(colors["yellow"] + fmt + colors["reset"]),
@@ -54,7 +54,7 @@ class ColoredFormatter(logging.Formatter):
     def format(self, record):
         return self._formatters.get(record.levelno, self._default_formatter).format(record)
 
-(logger := logging.getLogger(__name__)).setLevel(1)
+(logger := logging.getLogger(__name__)).setLevel(logging.INFO)
 logger.propagate = False
 (logger_handler := logging.StreamHandler()).setFormatter(ColoredFormatter(fmt=logging_format))
 logger.addHandler(logger_handler)
@@ -73,9 +73,17 @@ class Utils():
         self._session = None
 
     async def create_session(self) -> None:
+        if self._session is not None:
+            logger.error("The session is already initialized")
+            raise RuntimeError("The session is already initialized")
+        logger.debug("Creating aiohttp client session")
         self._session = ClientSession(json_serialize=ujson.dumps, timeout=ClientTimeout(total=5))
 
     async def close_session(self) -> None:
+        if self._session is None:
+            logger.error("No session initialized, can't close")
+            raise RuntimeError("No session initialized, can't close")
+        logger.debug("Closing aiohttp client session")
         await self._session.close()
         self._session = None
 
@@ -115,7 +123,8 @@ async def fetch_news_feed(date, dt_low, dt_high) -> bool:
         else:
             msg += "\nNon ci sono news per questa giornata"
         # SEND MESSAGE
-        await BOT.send_message(CHAT_ID, msg, "MarkdownV2", disable_web_page_preview=True)
+        for chat_id in CHAT_ID_LIST_FEED:
+            await BOT.send_message(chat_id, msg, "MarkdownV2", disable_web_page_preview=True)
         return True
     except Exception as e:
         logger.error(f"{type(e).__name__}: {e}")
@@ -128,7 +137,8 @@ async def fetch_news_apod(date, dt_low, dt_high) -> bool:
         apod_date = f"APOD {date}"
         apod_page_link = f"https://apod.nasa.gov/apod/ap{dt_low.strftime('%y%m%d')}.html"
         msg = f"{md.link(apod_date, apod_page_link)}: \"{rsp['title']}\""
-        await BOT.send_photo(CHAT_ID, rsp["url"], msg, "MarkdownV2")
+        for chat_id in CHAT_ID_LIST_APOD:
+            await BOT.send_photo(chat_id, rsp["url"], msg, "MarkdownV2")
         return True
     except Exception as e:
         logger.error(f"{type(e).__name__}: {e}")
@@ -138,6 +148,7 @@ async def fetch_news_apod(date, dt_low, dt_high) -> bool:
 scheduler = AsyncIOScheduler(timezone=TIMEZONE)
 
 @scheduler.scheduled_job(CronTrigger(hour=7))
+# @scheduler.scheduled_job(CronTrigger(hour=7), misfire_grace_time=300, next_run_time=datetime.now()) # for new users test
 # @scheduler.scheduled_job(IntervalTrigger(seconds=5)) # for debug
 async def fetch_news():
     date = (datetime.now()-timedelta(days=1)).strftime("%d/%m/%Y")
@@ -151,7 +162,7 @@ async def fetch_news():
             status_apod = await fetch_news_apod(date, dt_low, dt_high)
         if status_feed and status_apod:
             return
-        asyncio.sleep(300)
+        await asyncio.sleep(300)
 
 
 #####################################################################
@@ -166,9 +177,9 @@ async def main():
 
 if __name__ == "__main__":
     try:
-        logger.log(1, "[MAIN] Starting app: rss_telegram_bot")
+        logger.log(100, "[MAIN] Starting app: rss_telegram_bot")
         uvloop.install()
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
-        logger.log(1, "[MAIN] Interrupt detected, exit")
         asyncio.run(utils.close_session())
+        logger.log(1, "[MAIN] Interrupt detected, exit")
