@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1
 
 # RSS TELEGRAM BOT (https://github.com/Paolo97Gll/rss_telegram_bot)
-# Copyright (c) 2022 Paolo Galli
+# Copyright (c) 2022-2023 Paolo Galli
 
-FROM python:3.10
+FROM python:3.11
 
 # create venv and export it
 RUN python -m venv /venv

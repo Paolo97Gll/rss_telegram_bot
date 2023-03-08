@@ -1,9 +1,9 @@
 # RSS TELEGRAM BOT (https://github.com/Paolo97Gll/rss_telegram_bot)
-# Copyright (c) 2022 Paolo Galli
+# Copyright (c) 2022-2023 Paolo Galli
 
-aiogram == 2.21
-aiohttp[speedups] == 3.8.1
-apscheduler == 3.9.1
-ujson == 5.4.0
-uvloop == 0.16.0
-xmltodict == 0.13.0
+aiogram ~= 2.22
+aiohttp[speedups] ~= 3.8
+apscheduler ~= 3.9
+ujson ~= 5.5
+uvloop ~= 0.17.0
+xmltodict ~= 0.13.0

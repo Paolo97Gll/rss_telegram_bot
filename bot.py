@@ -1,7 +1,7 @@
-#!/usr/bin/env python3.10
+#!/usr/bin/env python3.11
 
 # RSS TELEGRAM BOT (https://github.com/Paolo97Gll/rss_telegram_bot)
-# Copyright (c) 2022 Paolo Galli
+# Copyright (c) 2022-2023 Paolo Galli
 
 import asyncio
 import logging
